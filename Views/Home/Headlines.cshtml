@@ -73,7 +73,8 @@
 </div>
 
 <script type="text/javascript">
-    axios.get("https://newsapi.org/v2/top-headlines?country=us&apiKey=4402dc2de8934f4f98b1a6e1b01ec86f").then(response => topnews(response.data));
+    const apiKey = "YOUR_API_KEY_HERE";
+    axios.get("https://newsapi.org/v2/top-headlines?country=us&apiKey=" + apiKey).then(response => topnews(response.data));
     
     
 
