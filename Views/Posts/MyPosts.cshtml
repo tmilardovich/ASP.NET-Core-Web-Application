@@ -1,0 +1,214 @@
+﻿@{
+    ViewData["Title"] = "My Posts";
+}
+@using System.Security.Claims;
+<br />
+
+<div id="alertdelete">
+
+</div>
+<h1>Publish new</h1>
+<form>
+    <div class="form-group">
+        <label for="textAreaPost">New post:</label>
+        <textarea class="form-control" id="textAreaPost" rows="3"></textarea>
+    </div>
+</form>
+
+<div id="alert" style="display:none">
+    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+        <strong>Publishing ...</strong> Please wait.
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+</div>
+<button class="btn btn-primary" onclick="a()">Post</button>
+
+<br />
+<h1>My posts</h1>
+<div id="all">
+
+</div>
+<div id="alert2">
+
+</div>
+<div id="b"></div>
+
+
+
+
+
+<script type="text/javascript">
+    var icon = '<img src="~/icon/pngguru.com.png" data-toggle="tooltip" data-placement="top" title="Edited" />';
+    document.getElementById("alert2").innerHTML = '<div class="alert alert-warning" role="alert">' + 'Retrieving data ...' +
+        '</div >';
+
+    console.log("USER ID: " + @User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier).Value);
+    MyPostsAll()
+    async function MyPostsAll() {
+        await axios.get("/api/posts").then(response => resp(response));
+    }
+
+
+    function resp(odg) {
+        var userId = @User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier).Value;
+
+        var duljina = odg.data.length;
+
+
+            for (var i = 0; i < duljina; i++) {
+                if (odg.data[i].userId_foreignKey == userId) {
+                    var c = odg.data[i].postContent;
+                    if (c[0] == "*") {
+                        var newString = c.substring(1);
+
+                        document.getElementById("all").innerHTML += '<div class="card">' + '<div class="card-header">' +
+                            'Post     ' + 
+                            '<div style="all:unset">' +
+                            '<button type="button" class="btn btn-outline-warning" onclick="updatepost(' + odg.data[i].postId + ')"">Update</button>' + "&nbsp" +
+                            '<button type="button" class="btn btn-outline-danger" onclick="deletePost(' + odg.data[i].postId + ')"">Delete</button>' +
+                            '&nbsp<span class="badge badge-pill badge-secondary">Edited</span></div>' + '</div>' + '<div class="card-body">'
+                            + '<blockquote class="blockquote mb-0">' + '<blockquote class="blockquote mb-0">' +
+                            '<p>' + newString + '</p>' + '<footer class="blockquote-footer">Posted &#64 '
+                            + odg.data[i].postTime + '</footer>'
+                            + '</blockquote>' + '</blockquote>' + '</div>' + '</div>' + '<br />';
+
+                        
+                        
+                    }
+                    else {
+                        document.getElementById("all").innerHTML += '<div class="card">' + '<div class="card-header">' +
+                            'Post     ' +
+                            '<div style="all:unset">' +
+                            '<button type="button" class="btn btn-outline-warning" onclick="updatepost(' + odg.data[i].postId + ')"">Update</button>' + "&nbsp" +
+                            '<button type="button" class="btn btn-outline-danger" onclick="deletePost(' + odg.data[i].postId + ')"">Delete</button></div>' + '</div>' + '<div class="card-body">'
+                            + '<blockquote class="blockquote mb-0">' + '<blockquote class="blockquote mb-0">' +
+                            '<p>' + odg.data[i].postContent + '</p>' + '<footer class="blockquote-footer">Posted &#64 '
+                            + odg.data[i].postTime + '</footer>'
+                            + '</blockquote>' + '</blockquote>' + '</div>' + '</div>' + '<br />';
+                    }
+                    
+                }
+
+        }
+        if (document.getElementById("all").childElementCount < 1) {
+            document.getElementById("all").innerHTML = '<div class="alert alert-danger" role="alert">' + 'It is empty here.' +
+                '</div >';
+            document.getElementById("alert2").style.display = "none";
+
+        }
+        else {
+            document.getElementById("alert2").style.display = "none";
+        }
+
+
+
+
+    }
+    function currentTime() {
+        var currentdate = new Date();
+
+        var month = (currentdate.getMonth() + 1);
+        if (month < 10) {
+            newmonth = "0" + month.toString();
+        }
+        else {
+            newmonth = month;
+        }
+        var day = currentdate.getDate();
+        if (day < 10) {
+            newday = "0" + day.toString();
+        }
+        else {
+            newday = day;
+        }
+        var hours = currentdate.getHours();
+        if (hours < 10) {
+            newhours = "0" + hours.toString();
+        }
+        else {
+            newhours = hours;
+        }
+        var mins = currentdate.getMinutes();
+        if (mins < 10) {
+            newmins = "0" + mins.toString();
+        }
+        else {
+            newmins = mins;
+        }
+        var datetime2 = currentdate.getFullYear() + "-" + newmonth + "-" + newday + "T" + newhours + ":" + newmins + ":00";
+        return datetime2;
+    }
+    function a() {
+
+        var p = document.getElementById("textAreaPost").value;
+        if (p[0] == "*") {
+            alert("Post can not start with *");
+            return;
+        }
+        var x = document.getElementById("alert");
+
+        x.style.display = "block";
+
+        
+        var a = @User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier).Value;
+        var datetime2 = currentTime();
+        ax(p, a, datetime2);
+        async function ax(p, a, datetime2) {
+            await axios.post('/api/posts/savepost',
+                {
+                    "postId": 0,
+                    "postContent": p,
+                    "postTime": datetime2,
+                    "userId_foreignKey": a
+
+                }).then(function (response) {
+                    console.log(response.status);
+                    if (response.status == 200) {
+                        window.location = "/Posts/MyPosts";
+                    }
+                });
+
+        }
+    }
+
+    function updatepost(id) {
+        var userid =@User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier).Value;
+        
+
+
+
+        var popup = prompt("Please enter your new post:", "Enter here...");
+        if (popup == null || popup == "") {
+                console.log("User cancelled the prompt.");
+        }
+        else {
+            document.getElementById("alertdelete").innerHTML = '<div class="alert alert-danger" role="alert">Editing...</div >';
+            var dt = currentTime();
+            axios.put('/api/posts/editpost', {
+                "postId": id,
+                "postContent": "*" + popup,
+                "postTime": dt,
+                "userId_foreignKey": userid
+            }).then(response => server(response));
+        }
+
+
+
+
+    }
+    function deletePost(id) {
+        document.getElementById("alertdelete").innerHTML = '<div class="alert alert-danger" role="alert">Deletion...</div >';
+        var link = "/api/posts/" + String(id);
+        axios.delete(link).then(response => server(response));
+    }
+    function server(re) {
+        if (re.status == 200) {
+            window.location = "/Posts/MyPosts";
+        }
+    }
+</script>
+
+
+

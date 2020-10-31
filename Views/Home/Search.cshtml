@@ -1,0 +1,94 @@
+﻿@{
+    ViewData["Title"] = "Search";
+}
+@using System.Security.Claims;
+<h1>Search page</h1>
+<div class="form-group">
+    <label for="sel1">Select one to show posts:</label>
+    <select class="form-control" id="sel1">
+    </select>
+    <br>
+    <button type="button" class="btn btn-info" onclick="confirm()">Confirm</button>
+</div>
+
+<div id="alert"></div>
+<div id="alert2"></div>
+<div id="objave"></div>
+
+<script type="text/javascript">
+    function fun(response) {
+        var dulj = response.data.length;
+        var s = "";
+        for (let index = 0; index < dulj; index++) {
+            s += "<option>" + response.data[index].name + " " + response.data[index].surname + " (" + response.data[index].username +')</option >';
+        }
+        document.getElementById("sel1").innerHTML = s;
+    }
+    axios.get("/api/users").then(response => fun(response));
+
+    function confirm() {
+        document.getElementById("objave").innerHTML = "";
+        document.getElementById("alert").style.display = "block";
+        document.getElementById("alert").innerHTML = '<div class="alert alert-warning" role="alert">Retrieving data ...</div >';
+
+        var e = document.getElementById("sel1");
+        var strUser = e.options[e.selectedIndex].text;
+        var result = strUser.match(/\((.*)\)/);
+        var username = result[1];
+
+        var link = "/api/posts/" + username;
+        u = username;
+
+
+        axios.get(link).then(response => posts(response));
+    }
+    var u;
+    function posts(odg) {
+
+        var duljina = odg.data.length;
+
+        for (var i = 0; i < duljina; i++) {
+            var c = odg.data[i].postContent;
+            if (c[0] == "*") {
+                var newString = c.substring(1);
+
+                document.getElementById("objave").innerHTML += '<div class="card">' + '<div class="card-header">' +
+                    'Posted by    &#64' + u + "&nbsp"+
+                    '<button type="button" class="btn btn-outline-warning" onclick="addme(' + odg.data[i].postId + ')"">Add to Favourites</button>'
+                    + '&nbsp<span class="badge badge-pill badge-secondary">Edited</span>' +
+                     '</div>' + '<div class="card-body">' + '<blockquote class="blockquote mb-0">' + '<blockquote class="blockquote mb-0">' +
+                    '<p>' + newString + '</p>' + '<footer class="blockquote-footer">Posted &#64 ' + odg.data[i].postTime + '</footer>'
+                    + '</blockquote>' + '</blockquote>' + '</div>' + '</div>' + '<br />';
+
+            }
+            else {
+                document.getElementById("objave").innerHTML += '<div class="card">' + '<div class="card-header">' +
+                    'Posted by    &#64' + u +"&nbsp" +
+                    '<button type="button" class="btn btn-outline-warning" onclick="addme(' + odg.data[i].postId + ')"">Add to Favourites</button>'
+                    + '</div>' + '<div class="card-body">' + '<blockquote class="blockquote mb-0">' + '<blockquote class="blockquote mb-0">' +
+                    '<p>' + odg.data[i].postContent + '</p>' + '<footer class="blockquote-footer">Posted &#64 ' + odg.data[i].postTime + '</footer>'
+                    + '</blockquote>' + '</blockquote>' + '</div>' + '</div>' + '<br />';
+            }
+        }
+        document.getElementById("alert").style.display = "none";
+        if (document.getElementById("objave").childElementCount < 1) {
+                document.getElementById("objave").innerHTML = '<div class="alert alert-danger" role="alert">' + 'User has no posts.' +
+                    '</div >';
+            }
+    }
+
+    function addme(postID) {
+        document.getElementById("alert2").innerHTML = '<div class="alert alert-warning" role="alert">Saving...</div >';
+        var userID = @User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier).Value;
+        var link = "/api/favourites/" + userID + "/" + postID;
+        axios.post(link).then(response => ser(response));
+    }
+
+    function ser(response) {
+        if (response.status == 200) {
+            document.getElementById("alert2").innerHTML = '<div class="alert alert-success alert-dismissible fade show" role="alert">' +
+                '<strong>Success!</strong>Post saved.<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span>' +
+                '</button ></div >';
+        }
+    }
+</script>

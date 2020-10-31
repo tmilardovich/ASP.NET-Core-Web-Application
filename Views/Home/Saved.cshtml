@@ -1,0 +1,50 @@
+﻿@{
+    ViewData["Title"] = "Saved";
+}
+@using System.Security.Claims;
+<h1>Saved posts</h1>
+<div id="alert"></div>
+<div id="all"></div>
+
+<script type="text/javascript">
+    document.getElementById("alert").innerHTML = '<div class="alert alert-warning" role="alert">Retrieving data...</div >';
+    var u = @User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier).Value;
+    var link = "/api/favourites/" + u;
+    axios.get(link).then(response => f(response));
+
+    function f(odg) {
+        var duljina = odg.data.length;
+        if (duljina == 0) {
+            document.getElementById("alert").innerHTML = '<div class="alert alert-secondary" role="alert">Nothing saved.</div >';
+
+        }
+        else {
+            for (var i = 0; i < duljina; i++) {
+                document.getElementById("all").innerHTML += '<div class="input-group mb-3" id="id' + odg.data[i]._id_primary + '">' +
+                    '<input type="text" class="form-control" disabled placeholder="' + odg.data[i]._postId_foreignKey + '" aria-label="' + odg.data[i]._postId_foreignKey + '" aria-describedby="basic-addon2">'
+                    + '<div class="input-group-append">'
+                    + '<button class="btn btn-outline-warning" type="button" onclick=rem(' + odg.data[i]._id_primary + ')>Remove</button>'
+                    + '</div>'
+                    + '</div>';
+            }
+            document.getElementById("alert").innerHTML = '';
+        }
+        
+        
+            
+
+
+        
+    }
+
+    function rem(n) {
+        var link = "/api/favourites/" + n;
+        axios.delete(link).then(response => server(response));
+    }
+
+    function server(response) {
+        if (response.status == 200) {
+            window.location = "/Home/Saved";
+        }
+    }
+</script>

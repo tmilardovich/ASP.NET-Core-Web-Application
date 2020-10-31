@@ -1,0 +1,103 @@
+﻿@{
+    ViewData["Title"] = "Options";
+}
+
+<h1>Admin options</h1>
+<div id="alert"></div>
+<div class="form-group">
+    <label for="sel1">Delete user:</label>
+    <select class="form-control" id="sel1">
+    </select>
+    <br>
+    <button type="button" class="btn btn-danger" onclick="brisanjeUsera()">Confirm</button>
+</div>
+
+<div class="form-group">
+    <label for="sel2">Delete specific post. First choose user:</label>
+    <select class="form-control" id="sel2">
+    </select>
+    <br>
+    <button type="button" class="btn btn-danger" onclick="confirm2()">Confirm</button>
+</div>
+
+<div id="all"></div>
+
+
+<script type="text/javascript">
+
+    axios.get("/api/users").then(response => fun(response));
+    function fun(response) {
+        var dulj = response.data.length;
+        var s = "";
+        for (let index = 0; index < dulj; index++) {
+            if (response.data[index].username != "admin") {
+                s += "<option>" + response.data[index].name + " " + response.data[index].surname + " (" + response.data[index].username + ')</option >';
+            }
+            
+        }
+        document.getElementById("sel1").innerHTML = s;
+        document.getElementById("sel2").innerHTML = s + "<option>admin admin (admin)</option >";
+    }
+
+    function confirm2() {
+        
+        document.getElementById("alert").innerHTML = '<div class="alert alert-warning" role="alert">Please wait ...</div >';
+
+        var e = document.getElementById("sel2");
+        var strUser = e.options[e.selectedIndex].text;
+        var result = strUser.match(/\((.*)\)/);
+        var username = result[1];
+
+        var link = "/api/posts/" + username;
+        axios.get(link).then(response => odgovor(response))
+    }
+    function server(odg) {
+        if (odg.status == 200) {
+            window.location = "/Home/Options";
+        }
+    }
+    function odgovor(odg) {
+        if (odg.status == 200) {
+            var duljina = odg.data.length;
+            x = document.getElementById("all");
+            x.innerHTML = "";
+            for (var i = 0; i < duljina; i++) {
+                
+
+                x.innerHTML += '<div class="input-group mb-3" id="id' + odg.data[i].postId+'">'+
+                '<input type="text" class="form-control" disabled placeholder="' + odg.data[i].postContent + '" aria-label="' + odg.data[i].postContent + '" aria-describedby="basic-addon2">'
+                +'<div class="input-group-append">'
+                +'<button class="btn btn-outline-danger" type="button" onclick=brisi(' + odg.data[i].postId+')>Delete</button>'
+                 +'</div>'
+                +'</div>';
+                    
+            }
+            document.getElementById("alert").innerHTML = "";
+        }
+    }
+
+    function brisi(postid) {
+        document.getElementById("alert").innerHTML = '<div class="alert alert-danger" role="alert">Deletion...</div >';
+        var link = "/api/posts/" + String(postid);
+        axios.delete(link).then(response => odgovorServera(response, postid));
+    }
+
+    function odgovorServera(response, postid) {
+        if (response.status == 200) {
+            document.getElementById("alert").innerHTML = '<div class="alert alert-success" role="alert">Deletion successful</div >';
+            var s = "id" + postid;
+            var x = document.getElementById(s).parentNode;
+            x.removeChild(document.getElementById(s));
+        }
+    }
+
+    function brisanjeUsera() {
+        var e = document.getElementById("sel1");
+        var strUser = e.options[e.selectedIndex].text;
+        var result = strUser.match(/\((.*)\)/);
+        var username = result[1];
+        console.log(username);
+
+        axios.delete("/api/users/"+username).then(response => server(response));
+    }
+</script>

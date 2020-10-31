@@ -1,0 +1,19 @@
+﻿
+<h1 class="display-2">Who uses this app?</h1>
+<h1 id="rez"></h1>
+
+<script type="text/javascript">
+    function fun(response) {
+        var dulj = response.data.length;
+        var s = "";
+        for (let index = 0; index < dulj; index++) {
+            
+            s += "<p>" + response.data[index].name + " " + response.data[index].surname + " " + '<span class="text-success text-sm-center">' +"&#64"+ response.data[index].username +"</span>" +"</p>";
+
+        }
+        document.getElementById("rez").innerHTML = s;
+    }
+    axios.get("/api/users").then(response => fun(response));
+
+
+</script>
